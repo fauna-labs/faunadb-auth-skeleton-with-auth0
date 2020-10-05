@@ -4,15 +4,15 @@
   "description": "",
   "author": "Brecht De Rooms",
   "dependencies": {
-    "faunadb": "^2.14.2",
     "dotenv": "^8.2.0",
     "envfile": "^5.0.0",
-    "readline-promise": "^1.0.4"
+    "faunadb": "github:fauna/faunadb-js#api-v4/access-providers",
+    "readline-promise": "^1.0.4",
+    "url-join": "^4.0.1"
   },
   "scripts": {
     "start": "nodemon -r esm ./bin/www local",
     "setup": "node -r esm ./scripts/setup.js local",
-    "destroy": "node -r esm ./scripts/destroy.js local",
-    "update-functions": "node -r esm ./scripts/update-functions.js local"
+    "destroy": "node -r esm ./scripts/destroy.js local"
   }
 }

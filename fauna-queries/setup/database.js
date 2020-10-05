@@ -1,47 +1,34 @@
-import { createAccountCollection, PopulateAccounts } from './accounts'
 import { createDinoCollection, PopulateDinos } from './dinos'
 import { handleSetupError } from '../helpers/errors'
 import { executeFQL } from '../helpers/fql'
-
-import { CreateBootstrapRole, CreateFnRoleLogin, CreateFnRoleRegister, CreateLoggedInRole } from './roles'
-import { LoginUDF, RegisterUDF } from './functions'
+import { CreateLoggedRoleInBasic } from './roles'
+import { CreateAuth0ProviderSimple } from './providers'
 
 async function setupDatabase(client) {
-  const resAccounts = await handleSetupError(
-    createAccountCollection(client),
-    'collections/indexes - accounts collection'
-  )
   const resDinos = await handleSetupError(createDinoCollection(client), 'collections/indexes - dinos collection')
-
-  // Before we define functions we need to define the roles that will be assigned to them.
-  await executeFQL(client, CreateFnRoleLogin, 'roles - function role - login')
-  await executeFQL(client, CreateFnRoleRegister, 'roles - function role - register')
-
-  // Define the functions we will use
-  await executeFQL(client, LoginUDF, 'functions - login')
-  await executeFQL(client, RegisterUDF, 'functions - register')
-
-  // Now that we have defined the functions, the bootstrap role will give access to these functions.
-  await executeFQL(client, CreateBootstrapRole, 'roles - normal - bootstrap')
   // Finally the membership role will give logged in Accounts (literally members from the Accounts collection)
   // access to the protected data.
-  await executeFQL(client, CreateLoggedInRole, 'roles - membership role - logged in')
+
+  await executeFQL(client, CreateLoggedRoleInBasic, 'roles - collection-based role - logged in')
+
+  // Create Identity providers
+  const provider = await executeFQL(client, CreateAuth0ProviderSimple, 'provider - auth0 provider')
+  console.log(
+    `
+The provider was created, copy the audience (which is dervied from the databases' global_id)
+to configure the audience/identifier of the API at your Identity Providers side (Auth0 in this case)
+!!! Make sure to place the audience in your frontends env variables as: REACT_APP_LOCAL___AUTH0_AUDIENCE (e.g. in .env.local)
+
+`,
+    provider
+  )
 
   // Populate, add some mascottes if the collection was newly made
   // (resDinos will contain the collection if it's newly made, else false)
   if (resDinos) {
     await executeFQL(client, PopulateDinos, 'populate - add some mascot data')
   }
-  // Add some example accounts
-  if (resAccounts) {
-    await executeFQL(client, PopulateAccounts, 'populate - add some accounts data')
-  }
+  return provider
 }
 
-async function updateFunctions(client) {
-  // Both are wrapped in our wrapper (CreateOrUpdateFunction) so they will just update if they already exist.
-  await executeFQL(client, LoginUDF, 'functions - login')
-  await executeFQL(client, RegisterUDF, 'functions - register')
-}
-
-export { setupDatabase, updateFunctions }
+export { setupDatabase }

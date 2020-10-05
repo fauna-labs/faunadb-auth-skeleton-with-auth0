@@ -1,33 +1,27 @@
-import React, { useEffect, useContext, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useAuth0 } from '@auth0/auth0-react'
 import { useHistory } from 'react-router-dom'
-import Loading from '../components/states/loading'
+import { toast } from 'react-toastify'
 
+import Loading from '../components/states/loading'
 import { faunaQueries } from '../fauna/query-manager'
 
-import SessionContext from '../context/session'
-
 const Home = () => {
+  const history = useHistory()
   const [dinos, setDinos] = useState(null)
   const [loading, setLoading] = useState(false)
-
-  const history = useHistory()
-
-  // Fetch the fweets on first load.
-  const sessionContext = useContext(SessionContext)
-  const { user } = sessionContext.state
+  const { user, getAccessTokenSilently, isAuthenticated, error } = useAuth0()
 
   useEffect(() => {
-    setLoading(true)
-    faunaQueries.getDinos().then(res => {
-      if (res !== false) {
-        setDinos(res)
-        setLoading(false)
-        history.push('/')
-      } else {
-        console.log('do something if no data?')
-      }
-    })
-  }, [user, history])
+    console.log('User:', user)
+
+    if (error) {
+      console.log(error)
+      toast.error('error authenticating')
+    } else if (isAuthenticated) {
+      fetchDinos(setDinos, setLoading, getAccessTokenSilently, history)
+    }
+  }, [history, error, isAuthenticated, getAccessTokenSilently])
 
   if (loading) {
     return Loading()
@@ -45,6 +39,25 @@ const Home = () => {
         <p className="no-results-subtext">No dinos are accessible!</p>
       </div>
     )
+  }
+}
+
+async function fetchDinos(setDinos, setLoading, getAccessTokenSilently, history) {
+  try {
+    setLoading(true)
+    const token = await getAccessTokenSilently()
+    console.log('Token:', token)
+    faunaQueries.setToken(token)
+    const dinos = await faunaQueries.getDinos()
+    console.log(dinos)
+    if (dinos !== false) {
+      setDinos(dinos)
+      setLoading(false)
+      history.push('/')
+    }
+  } catch (e) {
+    setLoading(false)
+    console.error('Error in fetching dinos', e)
   }
 }
 

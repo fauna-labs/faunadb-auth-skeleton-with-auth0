@@ -16,8 +16,7 @@
   "scripts": {
     "start_frontend": "cd frontend && npm run start",
     "setup": "cd fauna-queries && npm run setup",
-    "destroy": "cd fauna-queries && npm run destroy",
-    "update-functions": "cd fauna-queries && npm run update-functions"
+    "destroy": "cd fauna-queries && npm run destroy"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",

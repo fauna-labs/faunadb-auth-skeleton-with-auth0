@@ -1,7 +1,7 @@
 import faunadb from 'faunadb'
 
 const q = faunadb.query
-const { Paginate, Documents, Collection, Lambda, Get, Var } = q
+const { Paginate, Documents, Collection, Lambda, Get, Var, CurrentIdentity } = q
 
 export const GetAllDinos = q.Map(
   // map over the references returned from paginate

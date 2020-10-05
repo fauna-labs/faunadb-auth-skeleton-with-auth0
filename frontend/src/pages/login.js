@@ -1,49 +1,38 @@
-import React, { useContext } from 'react'
-import { useHistory } from 'react-router-dom'
+import React from 'react'
+
+import { useAuth0 } from '@auth0/auth0-react'
 import { toast } from 'react-toastify'
 
-import SessionContext from './../context/session'
-import { faunaQueries } from '../fauna/query-manager'
-
-// Components
-import Form from '../components/form'
-
-const handleLogin = (event, username, password, history, sessionContext) => {
-  faunaQueries
-    .login(username, password)
-    .then(account => {
-      if (account === false) {
-        toast.error('Login failed')
-      } else {
-        toast.success('Login successful')
-        sessionContext.dispatch({ type: 'login', data: account })
-        history.push('/')
-      }
-    })
-    .catch(e => {
-      if (e.error) {
-        toast.error(e.error)
-      } else {
-        console.log(e)
-        toast.error('Oops, something went wrong')
-      }
-    })
-
-  event.preventDefault()
-}
-
 const Login = props => {
-  const history = useHistory()
-  const sessionContext = useContext(SessionContext)
-  const { user } = sessionContext.state
+  const { isLoading, error, isAuthenticated, loginWithRedirect } = useAuth0()
 
-  if (!user) {
+  if (error) {
+    toast.error(error)
+  }
+  if (isLoading) {
+    return <div>Loading ...</div>
+  } else if (!isAuthenticated) {
     return (
-      <Form
-        title="Login"
-        formType="login"
-        handleSubmit={(event, username, password) => handleLogin(event, username, password, history, sessionContext)}
-      ></Form>
+      <React.Fragment>
+        <div className="form-container">
+          <div className="form-title"> Login/Register</div>
+          <div className="form-text">
+            <div className="form-text-paragraphs">
+              <p>
+                In previous examples, the Login and Register tab contained a login/register form. We no longer need such
+                a form since Auth0 provides us with a login form that supports credential-based login/signup as well as
+                SSO out-of-the-box.
+              </p>
+            </div>
+          </div>
+          <div className="form-text">Click the Login button to get redirected to the Auth0 login form!</div>
+          <div className="form-text">
+            <button onClick={loginWithRedirect} className="login">
+              Login
+            </button>
+          </div>
+        </div>
+      </React.Fragment>
     )
   } else {
     return (

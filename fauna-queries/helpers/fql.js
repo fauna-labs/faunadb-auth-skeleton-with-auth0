@@ -2,7 +2,7 @@ import { handleSetupError } from './errors'
 
 const faunadb = require('faunadb')
 const q = faunadb.query
-const { Exists, If, Delete, Update, CreateFunction, CreateRole, Role } = q
+const { Exists, If, Delete, Update, CreateFunction, CreateRole, Role, AccessProvider, CreateAccessProvider } = q
 
 // Some minor wrapper to execute FQL and at the same time log a statement.
 // and handle errors. We mainly use to provide a cleaner setup script progress and errors.
@@ -37,4 +37,12 @@ function CreateOrUpdateRole(obj) {
   )
 }
 
-export { executeFQL, DeleteIfExists, IfNotExists, CreateOrUpdateFunction, CreateOrUpdateRole }
+function CreateOrUpdateProvider(obj, name) {
+  return If(
+    Exists(AccessProvider(name || obj.name)),
+    Update(AccessProvider(name || obj.name), obj),
+    CreateAccessProvider(obj)
+  )
+}
+
+export { executeFQL, DeleteIfExists, IfNotExists, CreateOrUpdateFunction, CreateOrUpdateRole, CreateOrUpdateProvider }

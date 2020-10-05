@@ -5,7 +5,7 @@ const { executeFQL } = require('../helpers/fql')
 
 const faunadb = require('faunadb')
 const q = faunadb.query
-const { CreateKey, Exists, Database, CreateDatabase, If } = q
+const { CreateKey, Exists, Database, CreateDatabase, If, Get } = q
 const readline = require('readline-promise').default
 
 const keyQuestion = `----- 1. Please provide a FaunaDB admin key) -----
@@ -17,12 +17,10 @@ Enter your key or set it .env.local as 'FAUNADB_ADMIN_KEY' (do not push this to 
 
 const explanation = `
 Thanks!
-This script will (Do not worry! It will all do this for you): 
- - Setup the user defined functions 'login and register'
- - Create roles that the user defined functions will assume
- - Create a role for the initial key which can only call login/register
- - Create a role for an account to assume (database entities can assume roles, using Login a key can be retrieved for such an entity)
-(take a look at scripts/setup.js if it interests you what it does)
+This script will (Do not worry! It will all do this for you):
+ - Setup the access provider
+ - Create different example roles for the access provider to use
+ - Create the collections that the application uses for it's data)
 `
 
 export async function askKeyOrGetFromtEnvVars() {
@@ -44,7 +42,10 @@ export async function askKeyOrGetFromtEnvVars() {
 
 export async function getClient(adminKey) {
   // either we just use the admin key that we received for the client
-  let client = new faunadb.Client({ secret: adminKey })
+  const opts = { secret: adminKey }
+  if (process.env.FAUNADB_DOMAIN) opts.domain = process.env.FAUNADB_DOMAIN
+  if (process.env.FAUNADB_SCHEME) opts.scheme = process.env.FAUNADB_SCHEME
+  let client = new faunadb.Client(opts)
 
   const childDbName = process.env.CHILD_DB_NAME
   // except if the childDbName env var was set.
@@ -52,14 +53,20 @@ export async function getClient(adminKey) {
     // If this option is provided, the db will be created as a child db of the database
     // that the above admin key belongs to. This is useful to destroy/recreate a database
     // easily without having to wait for cache invalidation of collection/index names.
-    const CreateDBQuery = If(Exists(Database(childDbName)), false, CreateDatabase({ name: childDbName }))
-    await executeFQL(client, CreateDBQuery, 'database - create child database if it doesnt exist')
-
+    const CreateDBQuery = If(
+      Exists(Database(childDbName)),
+      Get(Database(childDbName)),
+      CreateDatabase({ name: childDbName })
+    )
+    const database = await executeFQL(client, CreateDBQuery, 'database - create child database if it doesnt exist')
     const CreateKeyQuery = CreateKey({ database: Database(childDbName), role: 'admin' })
     const key = await executeFQL(client, CreateKeyQuery, 'database admin key - create child database admin key')
 
     // in that case, we'll use a key from the child database to continue.
-    client = new faunadb.Client({ secret: key.secret })
+    const opts = { secret: key.secret }
+    if (process.env.FAUNADB_DOMAIN) opts.domain = process.env.FAUNADB_DOMAIN
+    if (process.env.FAUNADB_SCHEME) opts.scheme = process.env.FAUNADB_SCHEME
+    client = new faunadb.Client(opts)
     // If the admin key was a database called: 'example'
     // and our CHILD_DB_NAME was 'local', then we just
     // created a database structure as follows:

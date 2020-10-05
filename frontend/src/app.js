@@ -1,29 +1,28 @@
 import React from 'react'
+import { Auth0Provider } from '@auth0/auth0-react'
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 
 import Home from './pages/home'
 import Login from './pages/login'
-import Register from './pages/register'
-import Logout from './pages/logout'
 
+import Logout from './pages/logout'
 import Layout from './components/layout'
-import { SessionProvider, sessionReducer } from './context/session'
 
 const App = () => {
-  const [state, dispatch] = React.useReducer(sessionReducer, { user: null })
-
   // Return the header and either show an error or render the loaded profiles.
   return (
     <React.Fragment>
-      <Router>
-        <SessionProvider value={{ state, dispatch }}>
+      <Auth0Provider
+        domain={process.env.REACT_APP_LOCAL___AUTH0_DOMAIN}
+        clientId={process.env.REACT_APP_LOCAL___AUTH0_CLIENTID}
+        audience={process.env.REACT_APP_LOCAL___AUTH0_AUDIENCE}
+        redirectUri={window.location.origin}
+      >
+        <Router>
           <Layout>
             <Switch>
               <Route exact path="/accounts/login">
                 <Login />
-              </Route>
-              <Route exact path="/accounts/register">
-                <Register />
               </Route>
               <Route exact path="/accounts/logout">
                 <Logout />
@@ -33,8 +32,8 @@ const App = () => {
               </Route>
             </Switch>
           </Layout>
-        </SessionProvider>
-      </Router>
+        </Router>
+      </Auth0Provider>
     </React.Fragment>
   )
 }

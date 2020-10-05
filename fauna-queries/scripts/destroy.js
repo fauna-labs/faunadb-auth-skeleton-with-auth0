@@ -28,7 +28,10 @@ const {
 const main = async () => {
   // To set up we need an admin key either set in env vars or filled in when the script requests it.
   const adminKey = await askKeyOrGetFromtEnvVars()
-  const client = new faunadb.Client({ secret: adminKey })
+  const opts = { secret: adminKey }
+  if (process.env.FAUNADB_DOMAIN) opts.domain = process.env.FAUNADB_DOMAIN
+  if (process.env.FAUNADB_SCHEME) opts.scheme = process.env.FAUNADB_SCHEME
+  const client = new faunadb.Client(opts)
 
   const childDbName = process.env.CHILD_DB_NAME
 

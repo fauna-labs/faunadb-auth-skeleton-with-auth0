@@ -9,12 +9,8 @@ const links = [
     name: 'Home'
   },
   {
-    link: '/accounts/register',
-    name: 'Register'
-  },
-  {
     link: '/accounts/login',
-    name: 'Login'
+    name: 'Login/Register'
   },
   {
     link: '/accounts/logout',
