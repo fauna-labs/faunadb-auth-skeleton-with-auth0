@@ -4,7 +4,7 @@ const faunadb = require('faunadb')
 // Since everything is just functions, this is how easy it is to extend FQL
 
 const q = faunadb.query
-const { Collection, Query, Lambda, Select, Not, Equals, Get, Var } = q
+const { Collection, Query, Lambda, Select, Not, Equals, Get, Var, Let, And, CurrentToken, Any } = q
 
 const CreateLoggedRoleInBasic = CreateOrUpdateRole({
   name: 'loggedin_basic',
@@ -72,4 +72,119 @@ const CreateLoggedInRolePublic = CreateOrUpdateRole({
   ]
 })
 
-export { CreateLoggedRoleInBasic, CreateLoggedInRolePublic, CreateLoggedInRoleAdmin, CreateLoggedInRoleNormal }
+/****
+ * Example of an advanced role where fine-grained permissions such as:
+ *   "read:dinosaurs",
+ *   "read:dinosaurs:common",
+ *   "read:dinosaurs:epic",
+ *   "read:dinosaurs:exotic",
+ *   "read:dinosaurs:legendary",
+ *   "read:dinosaurs:rare",
+ *   "read:dinosaurs:uncommon"
+ * are verified. At first this seems complex but we'll use a small helper to simplify the process.
+ * If it makes sense to manage such fine-grained permissions via Auth0 for your usecase, do not hesitate
+ * since you can easily take this one step further and generate these kind of roles programmatically.
+ **/
+const CreateLoggedInRoleFineGrained = () =>
+  CreateOrUpdateRole({
+    name: 'loggedin_fine_grained',
+    privileges: [
+      {
+        resource: Collection('dinos'),
+        actions: {
+          read: Query(
+            Lambda(
+              ['dinoRef'],
+              And(
+                HasAccessToCollection('dinosaurs', 'read'),
+                HasAccessToDinosaurType('dinosaurs', 'read', Select(['data', 'rarity'], Get(Var('dinoRef'))))
+              )
+            )
+          )
+        }
+      }
+    ]
+  })
+
+/*****
+ * Function to easily enforce collection-level read rules
+ * those will come in on the permissions attribute in the token as:
+ *   read:dinosaurs
+ * which a helper FQL function will parse to:
+ * {
+ *  action: "read",
+ *  collection: "dinosaurs",
+ *  type: "common"
+ * }
+ * All we then have to do is verify whether the action and collection
+ * is present in one of the permissions objects. The helper function
+ * 'HasAccessGeneric' will loop over them and verify that for us.
+ */
+const HasAccessToCollection = (collectionName, accessType) => {
+  return HasAccessGeneric(
+    And(
+      Equals(accessType, Select(['action'], Var('splitString'))),
+      Equals(collectionName, Select(['collection'], Var('splitString')))
+    )
+  )
+}
+
+const HasAccessToDinosaurType = (collectionName, accessType, dinoType) => {
+  return HasAccessGeneric(
+    And(
+      Equals(dinoType, Select(['type'], Var('splitString'))),
+      Equals(accessType, Select(['action'], Var('splitString'))),
+      Equals(collectionName, Select(['collection'], Var('splitString')))
+    )
+  )
+}
+
+/*****
+ * Loops over the incoming permissions and verifies whether the defined rules returns true
+ * for any of them.
+ */
+const HasAccessGeneric = Rule => {
+  return Any(
+    q.Map(
+      Select(['permissions'], CurrentToken()),
+      Lambda(
+        ['permissionString'],
+        Let(
+          {
+            splitString: GetActionCollectionType(Var('permissionString'))
+          },
+          Rule
+        )
+      )
+    )
+  )
+}
+
+/*****
+ * turns the strings into a more convenient object. going from read:dinosaurs:common
+ * to
+ * {
+ *   action: "read",
+ *   collection: "dinosaurs",
+ *   type: "common"
+ * }
+ * so we can mor eeasily work with them.
+ */
+const GetActionCollectionType = permissionString =>
+  Let(
+    {
+      split: q.FindStrRegex(permissionString, q.Concat(['[^\\', ':', ']+'])),
+      action: Select([0, 'data'], Var('split'), false),
+      collection: Select([1, 'data'], Var('split'), false),
+      dinoType: Select([2, 'data'], Var('split'), false)
+    },
+    { action: Var('action'), collection: Var('collection'), type: Var('dinoType') }
+  )
+
+export {
+  CreateLoggedRoleInBasic,
+  CreateLoggedInRolePublic,
+  CreateLoggedInRoleAdmin,
+  CreateLoggedInRoleNormal,
+  CreateLoggedInRoleFineGrained
+}

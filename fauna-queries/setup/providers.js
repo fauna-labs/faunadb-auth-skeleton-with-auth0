@@ -41,4 +41,14 @@ const CreateAuth0ProviderRoles = CreateOrUpdateProvider(
   'Auth0'
 )
 
-export { CreateAuth0ProviderRoles, CreateAuth0ProviderSimple }
+const CreateAuth0ProviderFineGrained = CreateOrUpdateProvider(
+  {
+    name: 'Auth0',
+    issuer: 'https://' + process.env.AUTH0_DOMAIN + '/',
+    jwks_uri: 'https://' + urljoin(process.env.AUTH0_DOMAIN, '.well-known/jwks.json'),
+    roles: [Role('loggedin_fine_grained')]
+  },
+  'Auth0'
+)
+
+export { CreateAuth0ProviderRoles, CreateAuth0ProviderSimple, CreateAuth0ProviderFineGrained }
