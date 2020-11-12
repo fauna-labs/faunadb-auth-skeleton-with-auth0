@@ -3,7 +3,7 @@ import urljoin from 'url-join'
 
 const faunadb = require('faunadb')
 const q = faunadb.query
-const { Role } = q
+const { Role, Query, Lambda, ContainsValue, Select, Var } = q
 
 const CreateAuth0ProviderSimple = CreateOrUpdateProvider(
   {
@@ -18,4 +18,27 @@ const CreateAuth0ProviderSimple = CreateOrUpdateProvider(
   'Auth0'
 )
 
-export { CreateAuth0ProviderSimple }
+const AssignRole = (faunaRole, auth0Role) => {
+  return {
+    role: Role(faunaRole),
+    predicate: Query(
+      Lambda('accessToken', ContainsValue(auth0Role, Select(['https:/db.fauna.com/roles'], Var('accessToken'))))
+    )
+  }
+}
+
+const CreateAuth0ProviderRoles = CreateOrUpdateProvider(
+  {
+    name: 'Auth0',
+    issuer: 'https://' + process.env.AUTH0_DOMAIN + '/',
+    jwks_uri: 'https://' + urljoin(process.env.AUTH0_DOMAIN, '.well-known/jwks.json'),
+    roles: [
+      AssignRole('loggedin_normal', 'Normal'),
+      AssignRole('loggedin_admin', 'Admin'),
+      AssignRole('loggedin_public', 'Public')
+    ]
+  },
+  'Auth0'
+)
+
+export { CreateAuth0ProviderRoles, CreateAuth0ProviderSimple }

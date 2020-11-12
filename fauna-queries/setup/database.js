@@ -1,8 +1,13 @@
 import { createDinoCollection, PopulateDinos } from './dinos'
 import { handleSetupError } from '../helpers/errors'
 import { executeFQL } from '../helpers/fql'
-import { CreateLoggedRoleInBasic } from './roles'
-import { CreateAuth0ProviderSimple } from './providers'
+import {
+  CreateLoggedRoleInBasic,
+  CreateLoggedInRolePublic,
+  CreateLoggedInRoleAdmin,
+  CreateLoggedInRoleNormal
+} from './roles'
+import { CreateAuth0ProviderSimple, CreateAuth0ProviderRoles } from './providers'
 
 async function setupDatabase(client) {
   const resDinos = await handleSetupError(createDinoCollection(client), 'collections/indexes - dinos collection')
@@ -10,9 +15,12 @@ async function setupDatabase(client) {
   // access to the protected data.
 
   await executeFQL(client, CreateLoggedRoleInBasic, 'roles - collection-based role - logged in')
+  await executeFQL(client, CreateLoggedInRolePublic, 'roles - role-based public role - logged in')
+  await executeFQL(client, CreateLoggedInRoleAdmin, 'roles - role-based admin role  - logged in')
+  await executeFQL(client, CreateLoggedInRoleNormal, 'roles - role-based normal role  - logged in')
 
   // Create Identity providers
-  const provider = await executeFQL(client, CreateAuth0ProviderSimple, 'provider - auth0 provider')
+  const provider = await executeFQL(client, CreateAuth0ProviderRoles, 'provider - auth0 provider')
   console.log(
     `
 The provider was created, copy the audience (which is dervied from the databases' global_id)
