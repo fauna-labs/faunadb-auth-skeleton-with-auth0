@@ -4,7 +4,24 @@ const faunadb = require('faunadb')
 // Since everything is just functions, this is how easy it is to extend FQL
 
 const q = faunadb.query
-const { Collection, Query, Lambda, Select, Not, Equals, Get, Var, Let, And, CurrentToken, Any } = q
+const {
+  Collection,
+  Query,
+  Lambda,
+  Select,
+  Not,
+  Equals,
+  Get,
+  Var,
+  Let,
+  And,
+  CurrentToken,
+  Any,
+  Paginate,
+  Match,
+  Index,
+  CurrentIdentity
+} = q
 
 const CreateLoggedRoleInBasic = CreateOrUpdateRole({
   name: 'loggedin_basic',
@@ -181,10 +198,82 @@ const GetActionCollectionType = permissionString =>
     { action: Var('action'), collection: Var('collection'), type: Var('dinoType') }
   )
 
+const CreateLoggedInRoleWithFaunaDBGeneric = (roleName, FQLStatement) =>
+  Query(
+    Lambda(
+      ['dinoReference'],
+      Select(
+        ['data', 0],
+        Any(
+          q.Map(
+            Paginate(Match(Index('users_to_roles_by_user'), CurrentIdentity()), {
+              size: 100000
+            }),
+            Lambda(
+              ['roleMapping'],
+              Let(
+                {
+                  role: Get(Select(['data', 'role'], Get(Var('roleMapping')))),
+                  roleName: Select(['data', 'name'], Var('role'))
+                },
+                And(Equals(Var('roleName'), roleName), FQLStatement)
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+
+const CreateLoggedInRoleWithFaunaDBPublic = CreateOrUpdateRole({
+  name: 'loggedin_fauna_collections_public',
+  privileges: [
+    {
+      resource: Collection('dinos'),
+      actions: {
+        read: CreateLoggedInRoleWithFaunaDBGeneric(
+          'Public',
+          Equals(Select(['data', 'rarity'], Get(Var('dinoReference'))), 'common')
+        )
+      }
+    }
+  ]
+})
+
+const CreateLoggedInRoleWithFaunaDBNormal = CreateOrUpdateRole({
+  name: 'loggedin_fauna_collections_normal',
+  privileges: [
+    {
+      resource: Collection('dinos'),
+      actions: {
+        read: CreateLoggedInRoleWithFaunaDBGeneric(
+          'Normal',
+          Not(Equals(Select(['data', 'rarity'], Get(Var('dinoReference'))), 'legendary'))
+        )
+      }
+    }
+  ]
+})
+
+const CreateLoggedInRoleWithFaunaDBAdmin = CreateOrUpdateRole({
+  name: 'loggedin_fauna_collections_admin',
+  privileges: [
+    {
+      resource: Collection('dinos'),
+      actions: {
+        read: CreateLoggedInRoleWithFaunaDBGeneric('Admin', true)
+      }
+    }
+  ]
+})
+
 export {
   CreateLoggedRoleInBasic,
   CreateLoggedInRolePublic,
   CreateLoggedInRoleAdmin,
   CreateLoggedInRoleNormal,
-  CreateLoggedInRoleFineGrained
+  CreateLoggedInRoleFineGrained,
+  CreateLoggedInRoleWithFaunaDBPublic,
+  CreateLoggedInRoleWithFaunaDBNormal,
+  CreateLoggedInRoleWithFaunaDBAdmin
 }

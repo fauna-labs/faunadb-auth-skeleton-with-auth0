@@ -51,4 +51,23 @@ const CreateAuth0ProviderFineGrained = CreateOrUpdateProvider(
   'Auth0'
 )
 
-export { CreateAuth0ProviderRoles, CreateAuth0ProviderSimple, CreateAuth0ProviderFineGrained }
+const CreateAuth0ProviderWithFaunaCollections = CreateOrUpdateProvider(
+  {
+    name: 'Auth0',
+    issuer: 'https://' + process.env.AUTH0_DOMAIN + '/',
+    jwks_uri: 'https://' + urljoin(process.env.AUTH0_DOMAIN, '.well-known/jwks.json'),
+    roles: [
+      Role('loggedin_fauna_collections_public'),
+      Role('loggedin_fauna_collections_normal'),
+      Role('loggedin_fauna_collections_admin')
+    ]
+  },
+  'Auth0'
+)
+
+export {
+  CreateAuth0ProviderRoles,
+  CreateAuth0ProviderSimple,
+  CreateAuth0ProviderFineGrained,
+  CreateAuth0ProviderWithFaunaCollections
+}
