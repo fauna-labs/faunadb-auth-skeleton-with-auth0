@@ -1,6 +1,6 @@
 # Skeleton frontend application with Auth0 and Fauna
 
-### Upcoming feature disclaimer
+### New Fauna features
 
 This skeleton explains how to use the new Fauna features in combination with Auth0. These new features introduce a new concept called an Access Provider which allows you to configure your Fauna database to accept JWT tokens from an external IdP such as Auth0. In this skeleton we start by setting up Auth0 and Fauna for authentication (delivering SSO to your Fauna app) as explained in [this article](https://fauna.com/blog/setting-up-sso-authentication-in-fauna-with-auth0) and then continue with different authorization patterns as described in the [second article](https://fauna.com/blog/setting-advanced-role-based-access-patterns-in-your-spa-with-fauna-and-auth0). 
 
