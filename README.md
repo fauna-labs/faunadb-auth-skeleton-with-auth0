@@ -2,12 +2,11 @@
 
 ### Upcoming feature disclaimer
 
-This skeleton goes along with a blog post and the release of a new feature which will come out in November/December.
-The features are currently (at the time of writing) available in preview and will become available in production shortly. 
+This skeleton explains how to use the new Fauna features in combination with Auth0. These new features introduce a new concept called an Access Provider which allows you to configure your Fauna database to accept JWT tokens from an external IdP such as Auth0. In this skeleton we start by setting up Auth0 and Fauna for authentication (delivering SSO to your Fauna app) as explained in [this article](https://fauna.com/blog/setting-up-sso-authentication-in-fauna-with-auth0) and then continue with different authorization patterns as described in the [second article](https://fauna.com/blog/setting-advanced-role-based-access-patterns-in-your-spa-with-fauna-and-auth0). 
 
 ### About this repository
 
-This repository contains a Skeleton application which shows how to implement a login flow with Auth0 and React, retireve the user and access token (access JWT) and directly access Fauna with the Auth0 access JWT. The [default](https://github.com/fauna-brecht/faunadb-auth-skeleton-frontend-with-auth0/tree/default) branch contains the code (roles and access provider) to set up authentication with Auth0. The [extras](https://github.com/fauna-brecht/faunadb-auth-skeleton-frontend-with-auth0/tree/extras/) branch then builds upon this setup and implements three different more advanced authorization approaches. This skeleton goes along with a two-part blog post (link will be inserted later) that explains the setup and the different authorization approaches. 
+This repository contains a Skeleton application which shows how to implement a login flow with Auth0 and React, retrieve the user and access token (access JWT) and directly access Fauna with the Auth0 access JWT. The [default](https://github.com/fauna-brecht/faunadb-auth-skeleton-frontend-with-auth0/tree/default) branch contains the code (roles and access provider) to set up authentication with Auth0. The [extras](https://github.com/fauna-brecht/faunadb-auth-skeleton-frontend-with-auth0/tree/extras/) branch then builds upon this setup and implements three different more advanced authorization approaches. This skeleton goes along with a two-part blog post (link will be inserted later) that explains the setup and the different authorization approaches. 
 
 The current approach is a frontend-only approach to avoid adding extra complexity. The approaches detailed here are similar and should be applicable to a more secure approach that includes a backend. The main change will probably be how you interact with Auth0 to retrieve the access token. 
 
