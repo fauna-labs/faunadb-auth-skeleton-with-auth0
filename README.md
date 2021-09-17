@@ -50,16 +50,21 @@ A script was provided to set up Fauna resources which needs two variables to wor
 
 2. **Configure your Auth0 domain:**  you will need to inform the script about your Auth0 domain which typically is of the form  ```your-auth0-account.auth0.com```. Your account can be found in the upper right corner of your Auth0 dashboard and/or in your account settings. If you are unsure, the full URL can as be found in the basic information under the settings tab when you make a new Auth0 application (making an Auth0 app is explained in the blog post). As an example, since my Auth0 account is: ```faunadb-auth0``` my Auth0 domain is ```faunadb-auth0.auth0.com```.
 
-
-
 <u>Where to configure this information.</u>
 
-An .env example was provided in both the frontend as the fauna-queries folder. This configuration needs to be placed in the **fauna-queries** folder for which you can simply rename the ```/fauna-queries/.env.local.example``` to ```/fauna-queries/.env.local ```and fill in the following two variables:
+An .env example was provided in both the frontend as the fauna-queries folder. This configuration needs to be placed in the **fauna-queries** folder for which you can simply rename the ```/fauna-queries/.env.local.example``` to ```/fauna-queries/.env.local ```and fill in the following variables:
 
 ```
 FAUNADB_ADMIN_KEY=
+FAUNADB_DOMAIN=
 AUTH0_DOMAIN=
 ```
+
+### Configure the connection for your Region Group
+When you created your database, you specified a Region Group.  Connections to the database need to be configured with the corresponding Region Group endpoint.  If this is a child database, the Region Group will already be set to match the parent database.  If your database is in the `Classic` region group, then the default configuration is already set.  Otherwise, configure your project for the correct Region Group as follows:
+
+- Refer to the [Region Groups](https://docs.fauna.com/fauna/current/api/fql/region_groups#how-to-use-region-groups) documentation to obtain the correct endpoint for your Region Group.
+- Reference the [Connections](https://docs.fauna.com/fauna/current/drivers/connections.html) documentation for how to correctly set the endpoint for your specific driver.
 
 Other variables are extra configuration options for your or development convenience which are explained at the bottom of this README. 
 
@@ -89,7 +94,7 @@ The script also writes environment variables to your frontend folder (it will cr
 
 ### Set up the Auth0 resources
 
-In order for this to work we need Auth0 resources, more specifically an **Application** and **API**. The finer details are beyond the scope of this README since an extensive tutorial has been written that goes along with this repository to set these up (todo, insert link) but in case you are familiar with Auth0, you will need: 
+In order for this to work we need Auth0 resources, more specifically an **Application** and **API**. The finer details are beyond the scope of this README since an [extensive tutorial has been written](https://fauna.com/blog/setting-up-sso-authentication-in-fauna-with-auth0) that goes along with this repository to set these up but in case you are familiar with Auth0, you will need: 
 
 1. An Auth0 **Application**, for which the client ID will need to be assigned to the `REACT_APP_LOCAL___AUTH0_CLIENTID` variable  in `frontend/.env.local `
 

@@ -6,7 +6,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "envfile": "^5.0.0",
-    "faunadb": "^4.2.0",
+    "faunadb": "^4.4.0",
     "readline-promise": "^1.0.4",
     "url-join": "^4.0.1"
   },
